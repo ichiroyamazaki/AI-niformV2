@@ -1282,6 +1282,8 @@ Reader."""
                 messagebox.showerror("Invalid Student Number", 
                     f"The number '{student_number}' is a card ID for {existing_person['role']} {existing_person['name']}.\n"
                     f"Please enter the actual student number (e.g., 02000226226).")
+                # Clear the input field
+                self.student_number_var.set("")
                 return
         
         # Validate student number format (should be 11 digits for this example)
@@ -1289,6 +1291,8 @@ Reader."""
             messagebox.showerror("Invalid Format", 
                 f"Student number should be 11 digits.\n"
                 f"Please enter a valid student number (e.g., 02000226226).")
+            # Clear the input field
+            self.student_number_var.set("")
             return
         
         # Log the student entry
@@ -1318,14 +1322,10 @@ Reader."""
         """Handle back button click"""
         if self.current_screen == "turnstile":
             # From turnstile screen, go back to login
-            result = messagebox.askyesno("Confirm Exit", "Are you sure you want to go back to login?")
-            if result:
-                self.show_login_screen()
+            self.show_login_screen()
         else:
             # From other screens (visitor form, student entry), go back to guard splash
-            result = messagebox.askyesno("Confirm Exit", "Are you sure you want to go back to guard splash screen?")
-            if result:
-                self.show_guard_splash_screen()
+            self.show_guard_splash_screen()
     
     def quit_action(self, event=None):
         """Handle quit button click"""
