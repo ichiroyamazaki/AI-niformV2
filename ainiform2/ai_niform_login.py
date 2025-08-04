@@ -239,7 +239,7 @@ Reader."""
         footer_frame.pack(side='bottom', fill='x')
         
         # Time section (light blue)
-        time_frame = tk.Frame(footer_frame, bg='#ADD8E6', height=50)
+        time_frame = tk.Frame(footer_frame, bg='#12A7FB', height=50)
         time_frame.pack(side='left', fill='x', expand=True)
         time_frame.pack_propagate(False)
         
@@ -248,7 +248,7 @@ Reader."""
             text="",
             font=('Arial', 14, 'bold'),
             fg='white',
-            bg='#ADD8E6'
+            bg='#12A7FB'
         )
         self.time_label.pack(expand=True)
         
@@ -266,9 +266,9 @@ Reader."""
         )
         self.date_label.pack(expand=True)
         
-        # Button section (orange)
-        button_frame = tk.Frame(footer_frame, bg='#FF8C00', height=50)
-        button_frame.pack(side='left', fill='x', expand=True)
+        # Button section (orange) - fixed width to align with right panel
+        button_frame = tk.Frame(footer_frame, bg='#FF8C00', height=50, width=400)
+        button_frame.pack(side='right')
         button_frame.pack_propagate(False)
         
         if button_type == "quit":
