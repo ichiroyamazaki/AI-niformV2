@@ -192,9 +192,23 @@ Reader."""
         card_frame = tk.Frame(right_panel, bg='#1E90FF')
         card_frame.pack(fill='x', padx=40, pady=20)
         
+        # Guard ID label and input frame
+        guard_input_frame = tk.Frame(card_frame, bg='#1E90FF')
+        guard_input_frame.pack(anchor='w', pady=(5, 10))
+        
+        # Guard ID label
+        guard_id_label = tk.Label(
+            guard_input_frame,
+            text="Guard ID: ",
+            font=('Arial', 14, 'bold'),
+            fg='white',
+            bg='#1E90FF'
+        )
+        guard_id_label.pack(side='left')
+        
         # Card ID input (hidden for RFID keyboard input)
         self.card_entry = tk.Entry(
-            card_frame,
+            guard_input_frame,
             textvariable=self.card_input_var,
             font=('Arial', 14),
             width=15,
@@ -202,7 +216,7 @@ Reader."""
             bd=1,
             show='*'  # Hide the input for security
         )
-        self.card_entry.pack(anchor='w', pady=(5, 10))
+        self.card_entry.pack(side='left')
         self.card_entry.focus()
         
         # Bind events for automatic RFID processing
@@ -218,22 +232,6 @@ Reader."""
             bg='#1E90FF'
         )
         self.status_label.pack(anchor='w', pady=(5, 10))
-        
-        # Manual entry button (for testing)
-        manual_button = tk.Button(
-            card_frame,
-            text="Enter",
-            font=('Arial', 12, 'bold'),
-            fg='white',
-            bg='#42BE40',
-            relief='flat',
-            bd=0,
-            padx=15,
-            pady=5,
-            cursor='hand2',
-            command=self.process_card
-        )
-        manual_button.pack(anchor='w')
     
     def create_footer(self, button_type):
         """Create the footer bar with time, date, and button"""
@@ -353,14 +351,14 @@ Reader."""
                 # Store current guard information
                 self.current_guard = person
                 # Guard access granted - show new splash screen
-                self.status_label.config(text=f"Welcome Guard {person['name']} - ACCESS GRANTED", fg='green')
+                self.status_label.config(text="ACCESS GRANTED", fg='green')
                 # Clear the input field
                 self.card_input_var.set("")
                 # Show guard splash screen after 2 seconds
                 self.root.after(2000, self.show_guard_splash_screen)
             elif person['role'] == 'SPECIAL':
                 # Special pass access denied on turnstile screen
-                self.status_label.config(text=f"Special Pass {person['name']} - ACCESS DENIED", fg='red')
+                self.status_label.config(text="ACCESS DENIED", fg='red')
                 # Clear the input field and reset after delay
                 self.card_input_var.set("")
                 # Reset status and processing flag after 3 seconds
@@ -370,7 +368,7 @@ Reader."""
                     self.card_entry.focus()
             else:
                 # Student access denied
-                self.status_label.config(text=f"Student {person['name']} - ACCESS DENIED", fg='red')
+                self.status_label.config(text="ACCESS DENIED", fg='red')
                 # Clear the input field and reset after delay
                 self.card_input_var.set("")
                 # Reset status and processing flag after 3 seconds
@@ -380,7 +378,7 @@ Reader."""
                     self.card_entry.focus()
         else:
             # Show access denied status (no message box)
-            self.status_label.config(text=f"Card {card_id} - ACCESS DENIED", fg='red')
+            self.status_label.config(text="ACCESS DENIED", fg='red')
             # Clear the input field and reset after delay
             self.card_input_var.set("")
             # Reset status and processing flag after 3 seconds
@@ -1270,8 +1268,7 @@ Reader."""
             if existing_person['role'] == 'STUDENT_NUMBER':
                 # This is already a registered student number
                 messagebox.showinfo("Student Already Registered", 
-                    f"Student number '{student_number}' is already registered for {existing_person['name']}.\n"
-                    f"Entry: DUPLICATE")
+                    "This is a Valid Student ID Number. It's Working!")
                 # Clear the input field
                 self.student_number_var.set("")
                 # Return to guard splash screen
