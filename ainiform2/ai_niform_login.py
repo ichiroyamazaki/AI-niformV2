@@ -37,6 +37,11 @@ class AINiformApp:
         self.card_entry = None  # Store reference to card entry field
         self.is_processing = False  # Flag to prevent duplicate processing
         self.current_guard = None  # Store current guard information
+        self.last_response_message = ""  # Message to show on guard splash right panel
+        self.guard_message_label = None  # Reference to splash message label for updates
+        self.message_reset_after_id = None  # Timer handle for auto-clearing panel message
+        self.guard_student_inline_var = None  # Guard splash student ID var
+        self.visitor_student_inline_var = None  # Visitor form student ID var
         
         # Start with login screen
         self.show_login_screen()
@@ -356,9 +361,12 @@ Reader."""
                 self.card_input_var.set("")
                 # Show guard splash screen after 2 seconds
                 self.root.after(2000, self.show_guard_splash_screen)
+                # Clear any previous message after showing success
+                self.last_response_message = ""
             elif person['role'] == 'SPECIAL':
                 # Special pass access denied on turnstile screen
                 self.status_label.config(text="ACCESS DENIED", fg='red')
+                self.last_response_message = "Unknown / Invalid ID has been scanned."
                 # Clear the input field and reset after delay
                 self.card_input_var.set("")
                 # Reset status and processing flag after 3 seconds
@@ -379,6 +387,7 @@ Reader."""
         else:
             # Show access denied status (no message box)
             self.status_label.config(text="ACCESS DENIED", fg='red')
+            self.last_response_message = "Unknown / Invalid ID has been scanned."
             # Clear the input field and reset after delay
             self.card_input_var.set("")
             # Reset status and processing flag after 3 seconds
@@ -405,6 +414,15 @@ Reader."""
         
         # Footer bar
         self.create_footer("logout")
+        
+        # Schedule auto-clear of any prior message to default after 5 seconds
+        if self.last_response_message:
+            if self.message_reset_after_id is not None:
+                try:
+                    self.root.after_cancel(self.message_reset_after_id)
+                except Exception:
+                    pass
+            self.message_reset_after_id = self.root.after(5000, self.reset_guard_message)
     
     def create_guard_main_content(self):
         """Create the main content area for guard splash screen"""
@@ -447,15 +465,16 @@ Reader."""
         content_frame = tk.Frame(right_panel, bg='#1E90FF')
         content_frame.pack(expand=True, padx=40, pady=40)
         
-        # Awaiting ID card scan text
-        awaiting_label = tk.Label(
+        # Message area (shows last response or default text)
+        message_text = self.last_response_message if self.last_response_message else "Awaiting ID card scan."
+        self.guard_message_label = tk.Label(
             content_frame,
-            text="Awaiting ID card scan.",
+            text=message_text,
             font=('Arial', 20, 'bold'),
             fg='white',
             bg='#1E90FF'
         )
-        awaiting_label.pack(anchor='w', pady=(0, 30))
+        self.guard_message_label.pack(anchor='w', pady=(0, 30))
         
         # Visitor button
         visitor_button = tk.Button(
@@ -488,6 +507,30 @@ Reader."""
             command=self.student_action
         )
         student_button.pack(fill='x', pady=(0, 30))
+
+        
+        
+        # Student ID inline textbox (guard splash)
+        inline_student_label = tk.Label(
+            content_frame,
+            text="Student ID:",
+            font=('Arial', 12, 'bold'),
+            fg='white',
+            bg='#1E90FF'
+        )
+        inline_student_label.pack(anchor='w')
+        
+        self.guard_student_inline_var = tk.StringVar()
+        inline_student_entry = tk.Entry(
+            content_frame,
+            textvariable=self.guard_student_inline_var,
+            font=('Arial', 14),
+            width=20,
+            relief='solid',
+            bd=1
+        )
+        inline_student_entry.pack(fill='x', pady=(0, 15))
+        inline_student_entry.bind('<Return>', self.submit_student_inline)
         
         # Guard in-charge section
         guard_frame = tk.Frame(content_frame, bg='#1E90FF')
@@ -675,15 +718,16 @@ Reader."""
         content_frame = tk.Frame(right_panel, bg='#1E90FF')
         content_frame.pack(expand=True, padx=40, pady=40)
         
-        # Awaiting ID card scan text
-        awaiting_label = tk.Label(
+        # Right panel message area (shared behavior)
+        right_message_text = self.last_response_message if self.last_response_message else "Awaiting ID card scan."
+        self.guard_message_label = tk.Label(
             content_frame,
-            text="Awaiting ID card scan.",
+            text=right_message_text,
             font=('Arial', 20, 'bold'),
             fg='white',
             bg='#1E90FF'
         )
-        awaiting_label.pack(anchor='w', pady=(0, 30))
+        self.guard_message_label.pack(anchor='w', pady=(0, 30))
         
         # Visitor button (bright yellow)
         visitor_button = tk.Button(
@@ -716,6 +760,28 @@ Reader."""
             command=self.student_action
         )
         student_button.pack(fill='x', pady=(0, 30))
+        
+        # Student ID inline textbox on visitor form right panel
+        inline_student_label = tk.Label(
+            content_frame,
+            text="Student ID:",
+            font=('Arial', 12, 'bold'),
+            fg='white',
+            bg='#1E90FF'
+        )
+        inline_student_label.pack(anchor='w')
+        
+        self.visitor_student_inline_var = tk.StringVar()
+        inline_student_entry = tk.Entry(
+            content_frame,
+            textvariable=self.visitor_student_inline_var,
+            font=('Arial', 14),
+            width=20,
+            relief='solid',
+            bd=1
+        )
+        inline_student_entry.pack(fill='x', pady=(0, 15))
+        inline_student_entry.bind('<Return>', self.submit_student_inline)
         
         # Guard in-charge section
         guard_frame = tk.Frame(content_frame, bg='#1E90FF')
@@ -869,15 +935,16 @@ Reader."""
         content_frame = tk.Frame(right_panel, bg='#1E90FF')
         content_frame.pack(expand=True, padx=40, pady=40)
         
-        # Awaiting ID card scan text
-        awaiting_label = tk.Label(
+        # Right panel message area (shared behavior)
+        right_message_text = self.last_response_message if self.last_response_message else "Awaiting ID card scan."
+        self.guard_message_label = tk.Label(
             content_frame,
-            text="Awaiting ID card scan.",
+            text=right_message_text,
             font=('Arial', 20, 'bold'),
             fg='white',
             bg='#1E90FF'
         )
-        awaiting_label.pack(anchor='w', pady=(0, 30))
+        self.guard_message_label.pack(anchor='w', pady=(0, 30))
         
         # Visitor button (bright yellow)
         visitor_button = tk.Button(
@@ -1014,15 +1081,16 @@ Reader."""
         content_frame = tk.Frame(right_panel, bg='#1E90FF')
         content_frame.pack(expand=True, padx=40, pady=40)
         
-        # Awaiting ID card scan text
-        awaiting_label = tk.Label(
+        # Right panel message area (shared behavior)
+        right_message_text = self.last_response_message if self.last_response_message else "Awaiting ID card scan."
+        self.guard_message_label = tk.Label(
             content_frame,
-            text="Awaiting ID card scan.",
+            text=right_message_text,
             font=('Arial', 20, 'bold'),
             fg='white',
             bg='#1E90FF'
         )
-        awaiting_label.pack(anchor='w', pady=(0, 30))
+        self.guard_message_label.pack(anchor='w', pady=(0, 30))
         
         # Visitor button (bright yellow)
         visitor_button = tk.Button(
@@ -1187,15 +1255,16 @@ Reader."""
         content_frame = tk.Frame(right_panel, bg='#1E90FF')
         content_frame.pack(expand=True, padx=40, pady=40)
         
-        # Awaiting ID card scan text
-        awaiting_label = tk.Label(
+        # Right panel message area (shared behavior)
+        right_message_text = self.last_response_message if self.last_response_message else "Awaiting ID card scan."
+        self.guard_message_label = tk.Label(
             content_frame,
-            text="Awaiting ID card scan.",
+            text=right_message_text,
             font=('Arial', 20, 'bold'),
             fg='white',
             bg='#1E90FF'
         )
-        awaiting_label.pack(anchor='w', pady=(0, 30))
+        self.guard_message_label.pack(anchor='w', pady=(0, 30))
         
         # Visitor button (light grey)
         visitor_button = tk.Button(
@@ -1267,8 +1336,8 @@ Reader."""
         if existing_person:
             if existing_person['role'] == 'STUDENT_NUMBER':
                 # This is already a registered student number
-                messagebox.showinfo("Student Already Registered", 
-                    "This is a Valid Student ID Number. It's Working!")
+                # In-app only: brief success message on panel
+                self.last_response_message = "Student entry recorded successfully."
                 # Clear the input field
                 self.student_number_var.set("")
                 # Return to guard splash screen
@@ -1276,18 +1345,18 @@ Reader."""
                 return
             else:
                 # This is a card ID, not a valid student number
-                messagebox.showerror("Invalid Student Number", 
-                    f"The number '{student_number}' is a card ID for {existing_person['role']} {existing_person['name']}.\n"
-                    f"Please enter the actual student number (e.g., 02000226226).")
+                # In-app only: update panel with invalid message, then auto-reset
+                self.last_response_message = "Unknown / Invalid ID has been scanned."
+                self._schedule_panel_reset()
                 # Clear the input field
                 self.student_number_var.set("")
                 return
         
         # Validate student number format (should be 11 digits for this example)
         if len(student_number) != 11 or not student_number.isdigit():
-            messagebox.showerror("Invalid Format", 
-                f"Student number should be 11 digits.\n"
-                f"Please enter a valid student number (e.g., 02000226226).")
+            # In-app only: update panel with invalid message, then auto-reset
+            self.last_response_message = "Unknown / Invalid ID has been scanned."
+            self._schedule_panel_reset()
             # Clear the input field
             self.student_number_var.set("")
             return
@@ -1296,10 +1365,9 @@ Reader."""
         self.db_manager.log_access(student_number, "MANUAL_STUDENT")
         
         # Show success message
-        messagebox.showinfo("Student Entry", 
-            f"Student Number: {student_number}\n"
-            f"Entry: RECORDED\n"
-            f"Status: SUCCESS")
+        # In-app only: update message area rather than pop-up, then auto-reset
+        self.last_response_message = "Student entry recorded successfully."
+        self._schedule_panel_reset()
         
         # Clear the input field
         self.student_number_var.set("")
@@ -1307,9 +1375,70 @@ Reader."""
         # Return to guard splash screen
         self.show_guard_splash_screen()
     
+    def submit_student_inline(self, event=None):
+        """Handle student number submission from guard splash inline textbox"""
+        # Choose the active inline var from the screen we're on
+        if self.current_screen == "guard_splash":
+            active_var = self.guard_student_inline_var
+        else:
+            active_var = self.visitor_student_inline_var
+        student_number = active_var.get().strip()
+        
+        if not student_number:
+            messagebox.showwarning("Missing Information", "Please enter a student number")
+            return
+        
+        existing_person = self.db_manager.find_person(student_number)
+        if existing_person:
+            if existing_person['role'] == 'STUDENT_NUMBER':
+                # In-app only: brief success message on panel
+                active_var.set("")
+                self.last_response_message = "Student entry recorded successfully."
+                self.show_guard_splash_screen()
+                return
+            else:
+                active_var.set("")
+                self.last_response_message = "Unknown / Invalid ID has been scanned."
+                self._schedule_panel_reset()
+                return
+        
+        if len(student_number) != 11 or not student_number.isdigit():
+            active_var.set("")
+            self.last_response_message = "Unknown / Invalid ID has been scanned."
+            self._schedule_panel_reset()
+            return
+        
+        self.db_manager.log_access(student_number, "MANUAL_STUDENT")
+        active_var.set("")
+        self.last_response_message = "Student entry recorded successfully."
+        self._schedule_panel_reset()
+        self.show_guard_splash_screen()
+
+    def reset_guard_message(self):
+        """Reset the guard splash message back to default and update the label if present"""
+        self.last_response_message = ""
+        if self.message_reset_after_id is not None:
+            try:
+                self.root.after_cancel(self.message_reset_after_id)
+            except Exception:
+                pass
+            self.message_reset_after_id = None
+        if self.current_screen == "guard_splash" and self.guard_message_label is not None:
+            self.guard_message_label.config(text="Awaiting ID card scan.")
+
+    def _schedule_panel_reset(self):
+        """Schedule the right-panel message to return to default in 5s."""
+        if self.message_reset_after_id is not None:
+            try:
+                self.root.after_cancel(self.message_reset_after_id)
+            except Exception:
+                pass
+        self.message_reset_after_id = self.root.after(5000, self.reset_guard_message)
+    
     def logout_action(self, event=None):
         """Handle logout button click"""
-        result = messagebox.askyesno("Confirm Logout", "Are you sure you want to log out?")
+        # In-app only: immediate logout without modal
+        result = True
         if result:
             # Clear current guard information
             self.current_guard = None
@@ -1326,7 +1455,8 @@ Reader."""
     
     def quit_action(self, event=None):
         """Handle quit button click"""
-        result = messagebox.askyesno("Confirm Exit", "Are you sure you want to quit AI-niform?")
+        # In-app only: immediate quit without modal
+        result = True
         if result:
             self.root.quit()
 
